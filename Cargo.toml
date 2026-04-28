@@ -1,0 +1,19 @@
+[package]
+name = "physics-12"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+macroquad = "0.4.14"
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "physics_sim"
+harness = false
+
+[[bench]]
+name = "render_benchmark"
+path = "benches/render_benchmark.rs"
+harness = false
