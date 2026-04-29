@@ -463,6 +463,8 @@ async fn main() {
                 color: DARKBLUE,
             },
         ],
+        delta_time: 1.0,
+        steps_per_frame: 1000,
     };
     let mut camera = CameraController::new(0, -20.);
 
@@ -485,14 +487,14 @@ async fn main() {
     .unwrap();
 
     loop {
-        for i in 0..1000 {
-            sim::tick(&mut world, 10.0_f64);
+        for i in 0..world.steps_per_frame {
+            sim::tick(&mut world);
         }
 
         camera.update(&world);
         //set_camera(&camera.camera());
 
-        render::draw(&world, &mut camera, &mut material);
+        render::draw(&mut world, &mut camera, &mut material);
         next_frame().await;
     }
 }

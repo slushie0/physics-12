@@ -18,7 +18,7 @@ pub fn draw(world: &GameState) {
     }
 }
 */
-pub fn draw(world: &GameState, camera: &mut CameraController, material: &mut Material) {
+pub fn draw(world: &mut GameState, camera: &mut CameraController, material: &mut Material) {
     clear_background(BLACK);
     material.set_uniform("u_resolution", (screen_width(), screen_height()));
     for body in world.bodies.iter() {
@@ -49,6 +49,10 @@ pub fn draw(world: &GameState, camera: &mut CameraController, material: &mut Mat
                 });
             ui.end_row();
             egui::Checkbox::new(&mut camera.show_labels, "Show Labels").ui(ui);
+            ui.label("Seconds per step");
+            egui::Slider::new(&mut world.delta_time, 0.01..=100.0).ui(ui);
+            ui.label("Steps per frame");
+            egui::Slider::new(&mut world.steps_per_frame, 1..=1000).ui(ui);
         });
         egui::Area::new("scale_bar_area".into())
             .anchor(egui::Align2::LEFT_BOTTOM, egui::vec2(0.0, 0.0))

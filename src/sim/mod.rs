@@ -3,18 +3,18 @@ use crate::world::*;
 mod gravity;
 mod charge;
 
-pub fn tick(world: &mut GameState, delta_time: f64) {
+pub fn tick(world: &mut GameState) {
     let forces = accumulate_forces(&world.bodies);
 
     for i in 0..forces.len() {
         if world.bodies[i].mass == 0. {
             continue;
         }
-        world.bodies[i].vel.x += (forces[i].x / world.bodies[i].mass) * delta_time;
-        world.bodies[i].vel.y += (forces[i].y / world.bodies[i].mass) * delta_time;
+        world.bodies[i].vel.x += (forces[i].x / world.bodies[i].mass) * world.delta_time;
+        world.bodies[i].vel.y += (forces[i].y / world.bodies[i].mass) * world.delta_time;
 
-        world.bodies[i].pos.x += world.bodies[i].vel.x * delta_time;
-        world.bodies[i].pos.y += world.bodies[i].vel.y * delta_time;
+        world.bodies[i].pos.x += world.bodies[i].vel.x * world.delta_time;
+        world.bodies[i].pos.y += world.bodies[i].vel.y * world.delta_time;
     }
 }
 

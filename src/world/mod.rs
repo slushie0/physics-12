@@ -76,7 +76,8 @@ impl SubAssign for Vec2 {
 
 pub struct GameState {
     pub bodies: Vec<Body>,
-    //pub trail_target: RenderTarget,
+    pub delta_time: f64,
+    pub steps_per_frame: usize,
 }
 
 #[derive(Clone)]
