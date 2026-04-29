@@ -47,6 +47,18 @@ pub fn draw(world: &mut GameState, camera: &mut CameraController, material: &mut
                         }
                     }
                 });
+            /*egui::ComboBox::from_id_salt(456)
+                .selected_text(&world.bodies[camera.target_id as usize].name)
+                .show_ui(ui, |ui| {
+                    for (i, body) in world.bodies.iter().enumerate() {
+                        if ui
+                            .selectable_value(&mut camera.target_id, i, &body.name)
+                            .clicked()
+                        {
+                            camera.offset = crate::world::Vec2::ZERO;
+                        }
+                    }
+                });*/
             ui.end_row();
             egui::Checkbox::new(&mut camera.show_labels, "Show Labels").ui(ui);
             ui.label("Seconds per step");
