@@ -1,6 +1,8 @@
 use macroquad::color::Color;
+use macroquad::texture::RenderTarget;
 use std::f64::consts::PI;
 use std::ops::{Add, Sub, AddAssign, SubAssign};
+use std::cmp::PartialEq;
 
 pub const G: f64 = 6.67430e-11;
 pub const Ke: f64 = 9e9;
@@ -12,34 +14,15 @@ pub struct Vec2 {
 }
 impl Vec2 {
     pub const ZERO: Self = Self { x: 0., y: 0. };
-}
-
-pub struct GameState {
-    pub bodies: Vec<Body>,
-}
-
-pub struct Body {
-    pub name: String,
-
-    pub pos: Vec2,
-    pub vel: Vec2,
-
-    pub mass: f64,
-    pub radius: f64,
-
-    pub charge: f64,
-    pub color: Color,
-}
-
-#[derive(Clone)]
-pub struct Force {
-    pub x: f64,
-    pub y: f64,
-}
-
-impl Force {
     pub fn from_components(x: f64, y: f64) -> Self {
         Self { x, y }
+    }
+
+    pub fn to_glam_f32(&self) -> macroquad::prelude::glam::f32::Vec2 {
+        macroquad::prelude::glam::f32::Vec2 {
+            x: self.x as f32,
+            y: self.y as f32,
+        }
     }
 
     fn from_polar(magnitude: f64, direction_deg: f64) -> Self {
@@ -58,7 +41,7 @@ impl Force {
         self.y.atan2(self.x) * 180.0 / PI
     }
 }
-impl Add for Force {
+impl Add for Vec2 {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self {
@@ -68,7 +51,7 @@ impl Add for Force {
         }
     }
 }
-impl Sub for Force {
+impl Sub for Vec2 {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self {
@@ -78,16 +61,41 @@ impl Sub for Force {
         }
     }
 }
-impl AddAssign for Force {
+impl AddAssign for Vec2 {
     fn add_assign(&mut self, rhs: Self) {
         self.x += rhs.x;
         self.y += rhs.y;
     }
 }
-impl SubAssign for Force {
+impl SubAssign for Vec2 {
     fn sub_assign(&mut self, rhs: Self) {
         self.x -= rhs.x;
         self.y -= rhs.y;
+    }
+}
+
+pub struct GameState {
+    pub bodies: Vec<Body>,
+    //pub trail_target: RenderTarget,
+}
+
+#[derive(Clone)]
+pub struct Body {
+    pub id: u32,
+    pub name: String,
+
+    pub pos: Vec2,
+    pub vel: Vec2,
+
+    pub mass: f64,
+    pub radius: f64,
+
+    pub charge: f64,
+    pub color: Color,
+}
+impl PartialEq for Body {
+    fn eq(&self, rhs: &Self) -> bool {
+        self.id == rhs.id
     }
 }
 

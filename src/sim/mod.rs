@@ -7,6 +7,9 @@ pub fn tick(world: &mut GameState, delta_time: f64) {
     let forces = accumulate_forces(&world.bodies);
 
     for i in 0..forces.len() {
+        if world.bodies[i].mass == 0. {
+            continue;
+        }
         world.bodies[i].vel.x += (forces[i].x / world.bodies[i].mass) * delta_time;
         world.bodies[i].vel.y += (forces[i].y / world.bodies[i].mass) * delta_time;
 
@@ -15,8 +18,8 @@ pub fn tick(world: &mut GameState, delta_time: f64) {
     }
 }
 
-fn accumulate_forces(bodies: &[Body]) -> Vec<Force> {
-    let mut forces: Vec<Force> = vec![Force::from_components(0., 0.); bodies.len()];
+fn accumulate_forces(bodies: &[Body]) -> Vec<Vec2> {
+    let mut forces: Vec<Vec2> = vec![Vec2::from_components(0., 0.); bodies.len()];
 
     // Pairwise interactions (gravity, springs, etc.)
     for i in 0..bodies.len() {

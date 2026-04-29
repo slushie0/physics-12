@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+egui-macroquad = "0.17.3"
 macroquad = "0.4.14"
 
 [dev-dependencies]

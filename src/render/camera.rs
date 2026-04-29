@@ -1,39 +1,48 @@
 use macroquad::prelude::*;
 
+use crate::world::{self, Body, GameState};
+
 const SCROLL_SENSITIVITY: f64 = 0.005;
 
 pub struct CameraController {
-    pub target: Vec2,
+    pub target_id: usize,
+    pub target: world::Vec2,
+    pub offset: world::Vec2,
+    pub zoom: f64, // <- store zoom in log space
 
-    zoom: f64, // <- store zoom in log space
+    pub show_labels: bool,
 
     is_dragging: bool,
-    last_mouse: Vec2,
+    last_mouse: world::Vec2,
 }
 
 impl CameraController {
-    pub fn new(zoom: f64) -> Self {
+    pub fn new(target_id: usize, zoom: f64) -> Self {
         Self {
-            target: vec2(0.0, 0.0),
+            target_id,
+            target: world::Vec2::ZERO,
+            offset: world::Vec2::ZERO,
+            zoom,
 
-            zoom: zoom,
+            show_labels: false,
 
             is_dragging: false,
-            last_mouse: vec2(0.0, 0.0),
+            last_mouse: world::Vec2::ZERO,
         }
     }
 
-    fn zoom(&self) -> f32 {
-        self.zoom.exp() as f32
+    pub fn zoom(&self) -> f64 {
+        self.zoom.exp()
     }
 
-    pub fn update(&mut self) {
+    pub fn update(&mut self, world: &GameState) {
         let mouse: Vec2 = mouse_position().into();
+        let mouse_f64 = world::Vec2::from_components(mouse.x as f64, mouse.y as f64);
 
         // --- PAN ---
         if is_mouse_button_pressed(MouseButton::Left) {
             self.is_dragging = true;
-            self.last_mouse = mouse;
+            self.last_mouse = mouse_f64.clone();
         }
 
         if is_mouse_button_released(MouseButton::Left) {
@@ -41,9 +50,15 @@ impl CameraController {
         }
 
         if self.is_dragging {
-            let delta = mouse - self.last_mouse;
-            self.target -= delta / self.zoom();
-            self.last_mouse = mouse;
+            let delta = world::Vec2::from_components(
+                mouse_f64.x - self.last_mouse.x,
+                mouse_f64.y - self.last_mouse.y,
+            );
+            self.offset = world::Vec2::from_components(
+                self.offset.x - delta.x / self.zoom(),
+                self.offset.y - delta.y / self.zoom(),
+            );
+            self.last_mouse = mouse_f64.clone();
         }
 
         // --- ZOOM ---
@@ -62,27 +77,59 @@ impl CameraController {
             let zoom_after = self.zoom();
 
             // --- zoom toward mouse (NO matrices) ---
-            let mouse_world_before =
-                self.target + (mouse - screen_center()) / zoom_before;
+            let screen_center_f64 = world::Vec2::from_components(
+                screen_center().x as f64,
+                screen_center().y as f64,
+            );
+            
+            let mouse_world_before = world::Vec2::from_components(
+                self.offset.x + (mouse_f64.x - screen_center_f64.x) / zoom_before,
+                self.offset.y + (mouse_f64.y - screen_center_f64.y) / zoom_before,
+            );
 
-            let mouse_world_after =
-                self.target + (mouse - screen_center()) / zoom_after;
+            let mouse_world_after = world::Vec2::from_components(
+                self.offset.x + (mouse_f64.x - screen_center_f64.x) / zoom_after,
+                self.offset.y + (mouse_f64.y - screen_center_f64.y) / zoom_after,
+            );
 
-            self.target += mouse_world_before - mouse_world_after;
+            self.offset = world::Vec2::from_components(
+                self.offset.x + mouse_world_before.x - mouse_world_after.x,
+                self.offset.y + mouse_world_before.y - mouse_world_after.y,
+            );
         }
+        let target_body = world.bodies[self.target_id].clone();
+        self.target = world::Vec2::from_components(target_body.pos.x + self.offset.x, target_body.pos.y + self.offset.y);
     }
 
-    pub fn camera(&self) -> Camera2D {
+    pub fn camera(&mut self) -> Camera2D {
         let zoom = self.zoom();
 
         Camera2D {
-            target: self.target,
+            target: self.target.to_glam_f32(),
             zoom: vec2(
-                zoom * 2.0 / screen_width(),
-                zoom * 2.0 / screen_height(),
+                zoom as f32 * 2.0 / screen_width(),
+                zoom as f32 * 2.0 / screen_height(),
             ),
             ..Default::default()
         }
+    }
+
+    pub fn world_to_screen(&self, world_pos: world::Vec2) -> Vec2 {
+        let zoom = self.zoom();
+        let relative_pos = world::Vec2::from_components(
+            world_pos.x - self.target.x,
+            world_pos.y - self.target.y,
+        );
+        
+        let screen_center_f64 = world::Vec2::from_components(
+            screen_center().x as f64,
+            screen_center().y as f64,
+        );
+        
+        let screen_x = screen_center_f64.x + relative_pos.x * zoom;
+        let screen_y = screen_center_f64.y + relative_pos.y * zoom;
+        
+        vec2(screen_x as f32, screen_y as f32)
     }
 }
 
